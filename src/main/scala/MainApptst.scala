@@ -43,7 +43,7 @@ object MainApptst extends App {
   //    .show(100)
   //
   val progsCount = progs.count()
-  val batchSize = 3
+  val batchSize = 10
   val iterations = Math.max(Math.ceil(progsCount / batchSize) , 1).intValue()
 
   for (i <- 1 to iterations) {
@@ -58,8 +58,9 @@ object MainApptst extends App {
       classes.withColumn("use", when($"result" === "USE", $"count(result)").otherwise(0))
         .withColumn("overloading", when($"result" === "OVERLOADING", $"count(result)").otherwise(0))
         .withColumn("extension", when($"result" === "EXTENSION", $"count(result)").otherwise(0))
+        .withColumn("refine_extension", when($"result" === "REFINED_EXTENSION", $"count(result)").otherwise(0))
         .groupBy("program1", "program2", "class1", "class2")
-        .sum("use", "overloading", "extension")
+        .sum("use", "overloading", "extension","refine_extension")
         .show()
 
     })
