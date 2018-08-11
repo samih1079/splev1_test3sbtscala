@@ -1,5 +1,6 @@
 import org.apache.spark.sql.{Dataset, Row, SparkSession}
 import org.apache.spark.sql.functions._
+
 object MainApptst extends App {
   val spark = SparkSession.builder().master("local").appName("test1").getOrCreate();
   spark.sparkContext.setLogLevel("ERROR")
@@ -11,18 +12,51 @@ object MainApptst extends App {
     .option("header", "true")
     .load("debugInfo_1533200012911fxd.csv").toDF()
 
-  peopleDFCsv.createOrReplaceTempView("progs")
+  //peopleDFCsv.createOrReplaceTempView("progs")
 
   import spark.implicits._
-  val qeury="select count(result),class1,class2 from progs group by (class1,class2)"
 
   val res=peopleDFCsv
-    .filter("result != 'NULL'")
-    .orderBy("program1","program2")
-    .groupBy("class1","class2","result","program1","program2")
+    //.filter("result != 'NULL'")
+      .filter(col("result")=!=("NULL"))
+    .orderBy("program1","program2","class1","class2")
+    .groupBy("program1","program2","class1","class2","result")
     .agg(count("result"))
 
-  res.show(100)
+
+
+//res.show(100);
+ // private val value: Dataset[Row] = res.select("count(result)").filter("program1='" + "P14" + "'" + " AND program2='" + "P15" + "'")
+ // value.show()
+  private val progs: Array[Row] = res.select("program1","program2").orderBy("program1","program2").distinct().take(100)
+//  progs.foreach(row=>{
+//    println(row.getString(0)+" "+row.getString(1))
+//  })
+  //  private val progs: Dataset[Row] = res.select("program1","program2").orderBy("program1","program2").distinct()
+//  private val testp14p15: Dataset[Row] = res.select("*").filter("program1='"+"P14"+"'" + " AND program2='"+"P15"+"'")
+//  testp14p15
+//    .withColumn("use",when($"result" === "USE",$"count(result)").otherwise(0))
+//    .withColumn("overloading",when($"result" === "OVERLOADING",$"count(result)").otherwise(0))
+//    .withColumn("extension",when($"result" === "EXTENSION",$"count(result)").otherwise(0))
+//    .groupBy("program1","program2","class1","class2")
+//    .sum("use","overloading","extension")
+//    .show(100)
+  //
+  progs.foreach(r=>{
+    println(r.getString(0)+" "+r.getString(1))
+    val  classes = res
+      .select("*")
+      .filter("program1='" + r.getString(0) + "'" + " AND program2='" + r.getString(1) + "'")
+    classes.withColumn("use",when($"result" === "USE",$"count(result)").otherwise(0))
+      .withColumn("overloading",when($"result" === "OVERLOADING",$"count(result)").otherwise(0))
+      .withColumn("extension",when($"result" === "EXTENSION",$"count(result)").otherwise(0))
+      .groupBy("program1","program2","class1","class2")
+      .sum("use","overloading","extension")
+      .show(100)
+
+  })
+//  print("hiii")
+//res.show(200);
 
 
 }
