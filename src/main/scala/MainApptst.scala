@@ -43,10 +43,11 @@ object MainApptst extends App {
   //    .show(100)
   //
   val progsCount = progs.count()
-  val batchSize = 10
-  val iterations = Math.max((progsCount / batchSize) , 1).intValue()
+  val batchSize = 3
+  val iterations = Math.max(Math.ceil(progsCount / batchSize) , 1).intValue()
 
   for (i <- 1 to iterations) {
+    println(s"iter:$i")
     val tmpDf = progs.limit(batchSize)
     val tmpVals = tmpDf.collect()
     tmpVals.foreach(r => {
