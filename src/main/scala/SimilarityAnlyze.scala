@@ -2,7 +2,7 @@ import org.apache.spark.sql.{DataFrame, Dataset, Row, SparkSession}
 import org.apache.spark.sql.functions._
 import SPLETools._
 
-object MainApptst extends App {
+object SimilarityAnlyze extends App {
   val spark =intitSpark()
   val peopleDFCsv:DataFrame =read("debugInfo_1533200012911fxd.csv")
   import spark.implicits._
