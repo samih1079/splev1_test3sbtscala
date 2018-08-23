@@ -49,7 +49,7 @@ import org.apache.spark.sql.functions._
        val tmpVals = tmpDf.collect()
        tmpVals.foreach(r => {
          println(r.getString(0) + " " + r.getString(1))
-         classesResEachProgPair(r.getString(0),r.getString(1),allClassRes).show();
+         classesResEachProgPair(r.getString(0),r.getString(1),allClassRes,0.8,0.8,0.8).show();
 //         val classes = allClassRes
 //           .select("*")
 //           .filter("program1='" + r.getString(0) + "'" + " AND program2='" + r.getString(1) + "'")
@@ -66,7 +66,7 @@ import org.apache.spark.sql.functions._
      }
    }
 
-   def classesResEachProgPair(prog1:String,prog2:String, allClassRes:DataFrame):DataFrame={
+   def classesResEachProgPair(prog1:String,prog2:String, allClassRes:DataFrame,paraThresh:Double,subThresh:Double,overThresh:Double):DataFrame={
      allClassRes
        .select("*")
        .filter("program1='" + prog1 + "'" + " AND program2='" + prog2 + "'")
@@ -85,7 +85,10 @@ import org.apache.spark.sql.functions._
          col("sum(overloading)")/(col("sum(use)")+col("sum(overloading)")+col("sum(extension)")+col("sum(refinement)")+col("sum(refine_extension)")))
        .withColumn("total",
          (col("sum(use)")+col("sum(overloading)")+col("sum(extension)")+col("sum(refinement)")+col("sum(refine_extension)")))
-
+       .withColumn("type",
+         when(col("parametric") >= paraThresh,"parametric")
+           .when(col("subtyping")>=subThresh,"subtyping")
+           .when(col("overloading")>=subThresh,"overloading").otherwise("none"))
    }
 
 
