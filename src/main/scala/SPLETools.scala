@@ -73,17 +73,18 @@ import org.apache.spark.sql.functions._
        .withColumn("use", when(col("result") === "USE", col("count(result)")).otherwise(0))
        .withColumn("overloading", when(col("result") === "OVERLOADING", col("count(result)")).otherwise(0))
        .withColumn("extension", when(col("result") === "EXTENSION", col("count(result)")).otherwise(0))
+       .withColumn("refinement", when(col("result") === "REFINEMENT", col("count(result)")).otherwise(0))
        .withColumn("refine_extension", when(col("result") === "REFINED_EXTENSION", col("count(result)")).otherwise(0))
        .groupBy("program1", "program2", "class1", "class2")
-       .sum("use", "overloading", "extension","refine_extension")
-       .withColumn("ratioUse",
-         col("sum(use)")/(col("sum(use)")+col("sum(overloading)")+col("sum(extension)")+col("sum(refine_extension)")))
-       .withColumn("ratioOverloading",
-         col("sum(overloading)")/(col("sum(use)")+col("sum(overloading)")+col("sum(extension)")+col("sum(refine_extension)")))
-       .withColumn("ratioExtension",
-         col("sum(extension)")/(col("sum(use)")+col("sum(overloading)")+col("sum(extension)")+col("sum(refine_extension)")))
-       .withColumn("ratioRefExt",
-         col("sum(refine_extension)")/(col("sum(use)")+col("sum(overloading)")+col("sum(extension)")+col("sum(refine_extension)")))
+       .sum("use", "overloading", "extension","refinement","refine_extension")
+       .withColumn("parametric",
+         col("sum(use)")/(col("sum(use)")+col("sum(overloading)")+col("sum(extension)")+col("sum(refinement)")+col("sum(refine_extension)")))
+       .withColumn("subtyping",
+         (col("sum(extension)")+col("sum(refinement)")+col("sum(refine_extension)"))/(col("sum(use)")+col("sum(overloading)")+col("sum(extension)")+col("sum(refinement)")+col("sum(refine_extension)")))
+       .withColumn("overloading",
+         col("sum(overloading)")/(col("sum(use)")+col("sum(overloading)")+col("sum(extension)")+col("sum(refinement)")+col("sum(refine_extension)")))
+       .withColumn("total",
+         (col("sum(use)")+col("sum(overloading)")+col("sum(extension)")+col("sum(refinement)")+col("sum(refine_extension)")))
 
    }
 
