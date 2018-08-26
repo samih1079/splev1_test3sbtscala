@@ -1,5 +1,13 @@
+import java.io.File
+import java.nio.file.Files
+import org.apache.hadoop.conf.Configuration
+import org.apache.hadoop.fs._
+
 import org.apache.spark.sql.{DataFrame, Dataset, Row, SparkSession}
 import org.apache.spark.sql.functions._
+
+import scala.collection.JavaConversions._
+
 
 
  object SPLETools {
@@ -42,15 +50,21 @@ import org.apache.spark.sql.functions._
      val progsCount = progs.count()
      val batchSize = 10
      val iterations = Math.max(Math.ceil(progsCount / batchSize) , 1).intValue()
-
+     var outputDir="\\output\\result"
      for (i <- 1 to iterations) {
        println(s"iter:$i")
        val tmpDf = progs.limit(batchSize)
        val tmpVals = tmpDf.collect()
        tmpVals.foreach(r => {
          println(r.getString(0) + " " + r.getString(1))
-         classesResEachProgPair(r.getString(0),r.getString(1),allClassRes,0.8,0.8,0.8).show();
-//         val classes = allClassRes
+         val towProgsRes = classesResEachProgPair(r.getString(0),r.getString(1),allClassRes,0.8,0.8,0.8)
+          towProgsRes.show()
+
+         //todo save to single csv file
+         //saveDfToCsv(towProgsRes,"result"+".csv")
+        towProgsRes.coalesce(1).write.format("com.databricks.spark.csv").option("header", "true").mode("append").save(outputDir)
+
+         //         val classes = allClassRes
 //           .select("*")
 //           .filter("program1='" + r.getString(0) + "'" + " AND program2='" + r.getString(1) + "'")
 //         classes.withColumn("use", when(col("result") === "USE", col("count(result)")).otherwise(0))
@@ -64,6 +78,20 @@ import org.apache.spark.sql.functions._
        })
        progs = progs.except(tmpDf)
      }
+     val dir = new File(outputDir)
+     val resultname="res.csv"
+     var resfile:File=null
+     var isFirst=false;
+     dir.listFiles().foreach(f=>{
+       val fname=f.getName
+       if(fname.startsWith("part-00000")&& fname.endsWith(".csv") )
+         {
+           if(resfile==null)resfile=f
+           else
+            merge(f.getPath,resfile.getPath)
+         }
+     })
+     //resfile.renameTo(new File("res.csv"))
    }
 
    def classesResEachProgPair(prog1:String,prog2:String, allClassRes:DataFrame,paraThresh:Double,subThresh:Double,overThresh:Double):DataFrame={
@@ -92,6 +120,58 @@ import org.apache.spark.sql.functions._
    }
 
 
+   def merge(srcPath: String, dstPath: String): Unit =  {
+     val hadoopConfig = new Configuration()
+     val hdfs = FileSystem.get(hadoopConfig)
+     FileUtil.copyMerge(hdfs, new Path(srcPath), hdfs, new Path(dstPath), true, hadoopConfig, null)
+     // the "true" setting deletes the source files once they are merged into the new output
+   }
+   def saveDfToCsv(df: DataFrame, tsvOutput: String): Unit = {
+     val tmpParquetDir = "s_output"
+//         towProgsRes.coalesce(1).
+     // write.format("com.databricks.spark.csv").
+     // option("header", "true")
+     // .mode("append").save("\\output\\result"+".csv")
+     df.repartition(1).write.
+       format("com.databricks.spark.csv").
+       option("header", "true").
+       save(tmpParquetDir)
+
+     val dir = new File(tmpParquetDir)
+     val tmpTsvFile = tmpParquetDir + File.separatorChar + "part-00000"
+     (new File(tmpTsvFile)).renameTo(new File(tsvOutput))
+
+     dir.listFiles.foreach( f => {
+       f.delete
+     } )
+
+     dir.delete
+   }
+//   def func(df: DataFrame, tsvOutput: String): Unit ={
+  // write csv into temp directory which contains the additional spark output files
+  // could use Files.createTempDirectory instead
+//  val file = new File(tsvOutput)
+//  val tempDir = file.getParent;
+//  df.coalesce(1)
+//    .write.format("com.databricks.spark.csv")
+//    .option("header", "true")
+//    .save(file.getName)
+//
+//  // find the actual csv file
+//  val tmpCsvFile = Files.walk(, 1).iterator().toSeq.find { p =>
+//    val fname = p.getFileName.toString
+//    fname.startsWith("part-00000") && fname.endsWith(".csv") && Files.isRegularFile(p)
+//  }.get
+//
+//  // move to desired final path
+//  Files.move(tmpCsvFile, file)
+//
+//  // delete temp directory
+//  Files.walk(tempDir)
+//    .sorted(java.util.Comparator.reverseOrder())
+//    .iterator().toSeq
+//    .foreach(Files.delete(_))
+//}
 
 
 }
