@@ -1,12 +1,14 @@
-import java.io.File
+import java.io.{File, IOException}
 import java.nio.file.Files
+
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs._
-
+import org.apache.hadoop.io.IOUtils
 import org.apache.spark.sql.{DataFrame, Dataset, Row, SparkSession}
 import org.apache.spark.sql.functions._
 
 import scala.collection.JavaConversions._
+import scala.util.Try
 
 
 
@@ -79,18 +81,16 @@ import scala.collection.JavaConversions._
        progs = progs.except(tmpDf)
      }
      val dir = new File(outputDir)
-     val resultname="res.csv"
-     var resfile:File=null
-     var isFirst=false;
+     val resultname="spleres.csv"
+//     var resfile:File=new File(dir+File.separator+resultname)
      dir.listFiles().foreach(f=>{
        val fname=f.getName
-       if(fname.startsWith("part-00000")&& fname.endsWith(".csv") )
-         {
-           if(resfile==null)resfile=f
-           else
-            merge(f.getPath,resfile.getPath)
-         }
+       if ((fname.startsWith("part-00000")&& fname.endsWith(".csv") ))
+         {}
+       else
+         f.delete();
      })
+     val check=merge(outputDir,"\\output"+File.separator+resultname,true)
      //resfile.renameTo(new File("res.csv"))
    }
 
@@ -120,33 +120,66 @@ import scala.collection.JavaConversions._
    }
 
 
-   def merge(srcPath: String, dstPath: String): Unit =  {
+   def merge(srcPath: String, dstPath: String, delSource:Boolean): Unit =  {
      val hadoopConfig = new Configuration()
      val hdfs = FileSystem.get(hadoopConfig)
-     FileUtil.copyMerge(hdfs, new Path(srcPath), hdfs, new Path(dstPath), true, hadoopConfig, null)
+     FileUtil.copyMerge(hdfs, new Path(srcPath), hdfs, new Path(dstPath), delSource, hadoopConfig, null)
      // the "true" setting deletes the source files once they are merged into the new output
    }
-   def saveDfToCsv(df: DataFrame, tsvOutput: String): Unit = {
-     val tmpParquetDir = "s_output"
-//         towProgsRes.coalesce(1).
-     // write.format("com.databricks.spark.csv").
-     // option("header", "true")
-     // .mode("append").save("\\output\\result"+".csv")
-     df.repartition(1).write.
-       format("com.databricks.spark.csv").
-       option("header", "true").
-       save(tmpParquetDir)
 
-     val dir = new File(tmpParquetDir)
-     val tmpTsvFile = tmpParquetDir + File.separatorChar + "part-00000"
-     (new File(tmpTsvFile)).renameTo(new File(tsvOutput))
+   def copyMerge(
+                  srcFS: FileSystem, srcDir: Path,
+                  dstFS: FileSystem, dstFile: Path,
+                  deleteSource: Boolean, conf: Configuration
+                ): Boolean = {
 
-     dir.listFiles.foreach( f => {
-       f.delete
-     } )
+     if (dstFS.exists(dstFile))
+       throw new IOException(s"Target $dstFile already exists")
 
-     dir.delete
+     // Source path is expected to be a directory:
+     if (srcFS.getFileStatus(srcDir).isDirectory()) {
+
+       val outputFile = dstFS.create(dstFile)
+       Try {
+         srcFS
+           .listStatus(srcDir)
+           .sortBy(_.getPath.getName)
+           .collect {
+             case status if status.isFile() =>
+               val inputFile = srcFS.open(status.getPath())
+               Try(IOUtils.copyBytes(inputFile, outputFile, conf, false))
+               inputFile.close()
+           }
+       }
+       outputFile.close()
+
+       if (deleteSource) srcFS.delete(srcDir, true) else true
+     }
+     else false
    }
+//   def saveDfToCsv(df: DataFrame, tsvOutput: String): Unit = {
+//     val tmpParquetDir = "s_output"
+////         towProgsRes.coalesce(1).
+//     // write.format("com.databricks.spark.csv").
+//     // option("header", "true")
+//     // .mode("append").save("\\output\\result"+".csv")
+//     df.repartition(1).write.
+//       format("com.databricks.spark.csv").
+//       option("header", "true").
+//       save(tmpParquetDir)
+//
+//     val dir = new File(tmpParquetDir)
+//     val tmpTsvFile = tmpParquetDir + File.separatorChar + "part-00000"
+//     (new File(tmpTsvFile)).renameTo(new File(tsvOutput))
+//
+//     dir.listFiles.foreach( f => {
+//       f.delete
+//     } )
+//
+//     dir.delete
+//   }
+
+
 //   def func(df: DataFrame, tsvOutput: String): Unit ={
   // write csv into temp directory which contains the additional spark output files
   // could use Files.createTempDirectory instead
