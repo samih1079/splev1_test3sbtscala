@@ -5,6 +5,8 @@ import SPLETools._
 object SimilarityAnlyze extends App {
   val spark =intitSpark()
   val peopleDFCsv:DataFrame =read("debugInfo_1533200012911fxd.csv")
+ // println(peopleDFCsv.schema)
+  //peopleDFCsv.columns.foreach(c=>println(c))
   import spark.implicits._
   val res=countResultNoNullForEachProg(peopleDFCsv)
 

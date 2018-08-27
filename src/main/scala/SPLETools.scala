@@ -4,8 +4,9 @@ import java.nio.file.Files
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs._
 import org.apache.hadoop.io.IOUtils
-import org.apache.spark.sql.{DataFrame, Dataset, Row, SparkSession}
+import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
+import org.apache.spark.sql.types.StructType
 
 import scala.collection.JavaConversions._
 import scala.util.Try
@@ -13,6 +14,7 @@ import scala.util.Try
 
 
  object SPLETools {
+
    var spark:SparkSession = SparkSession.builder().master("local").appName("test1").getOrCreate()
 
    def intitSpark():SparkSession= {
@@ -29,9 +31,24 @@ import scala.util.Try
       .option("sep", ",")
       .option("inferSchema", "true")
       .option("header", "true")
+
       .load(csvFile).toDF()
     peopleDFCsv
   }
+
+   def readRes(csvFile:String,schema:String): DataFrame =
+   {
+     spark.sparkContext.setLogLevel("ERROR")
+     val res = spark
+       .read
+       .format("csv")
+       .option("sep", ",")
+       .option("inferSchema", "true")
+       .option("header", "true")
+       .schema(schema)
+       .load(csvFile).toDF()
+     res
+   }
    def countResultNoNullForEachProg(dataFrame: DataFrame):DataFrame =
    {
      dataFrame
@@ -47,12 +64,18 @@ import scala.util.Try
        .orderBy("program1", "program2").distinct()
    }
 
+
+
+
+
    def showClassesResultForEachProgPair(allClassRes:DataFrame): Unit ={
      var progs=allProgsDistinctPairs(allClassRes);
      val progsCount = progs.count()
      val batchSize = 10
+     var isfirst: Boolean = true
+     var dataDF:DataFrame = null
      val iterations = Math.max(Math.ceil(progsCount / batchSize) , 1).intValue()
-     var outputDir="\\output\\result"
+     var outputDir="output\\result"
      for (i <- 1 to iterations) {
        println(s"iter:$i")
        val tmpDf = progs.limit(batchSize)
@@ -64,34 +87,35 @@ import scala.util.Try
 
          //todo save to single csv file
          //saveDfToCsv(towProgsRes,"result"+".csv")
-        towProgsRes.coalesce(1).write.format("com.databricks.spark.csv").option("header", "true").mode("append").save(outputDir)
-
-         //         val classes = allClassRes
-//           .select("*")
-//           .filter("program1='" + r.getString(0) + "'" + " AND program2='" + r.getString(1) + "'")
-//         classes.withColumn("use", when(col("result") === "USE", col("count(result)")).otherwise(0))
-//           .withColumn("overloading", when(col("result") === "OVERLOADING", col("count(result)")).otherwise(0))
-//           .withColumn("extension", when(col("result") === "EXTENSION", col("count(result)")).otherwise(0))
-//           .withColumn("refine_extension", when(col("result") === "REFINED_EXTENSION", col("count(result)")).otherwise(0))
-//           .groupBy("program1", "program2", "class1", "class2")
-//           .sum("use", "overloading", "extension","refine_extension")
-//           .show()
+        towProgsRes.coalesce(1)
+          .write
+          .format("com.databricks.spark.csv")
+          .option("header", "false")
+          .mode("append")
+          .save(outputDir)
 
        })
        progs = progs.except(tmpDf)
      }
      val dir = new File(outputDir)
      val resultname="spleres.csv"
-//     var resfile:File=new File(dir+File.separator+resultname)
-     dir.listFiles().foreach(f=>{
-       val fname=f.getName
-       if ((fname.startsWith("part-00000")&& fname.endsWith(".csv") ))
-         {}
-       else
-         f.delete();
-     })
-     val check=merge(outputDir,"\\output"+File.separator+resultname,true)
+     val check=merge(outputDir,"output"+File.separator+resultname,true)
+
+     //     var resfile:File=new File(dir+File.separator+resultname)
+//     dir.listFiles().foreach(f=>{
+//       val fname=f.getName
+//       if ((fname.startsWith("part-00000")&& fname.endsWith(".csv") ))
+//         {}
+//       else {
+//         //f.delete();
+//       }
+//     })
+
+
+
      //resfile.renameTo(new File("res.csv"))
+
+
    }
 
    def classesResEachProgPair(prog1:String,prog2:String, allClassRes:DataFrame,paraThresh:Double,subThresh:Double,overThresh:Double):DataFrame={
@@ -157,7 +181,56 @@ import scala.util.Try
      }
      else false
    }
-//   def saveDfToCsv(df: DataFrame, tsvOutput: String): Unit = {
+
+   def merge(srcPath: String, dstPath: String, header:String): Unit =  {
+     val hadoopConfig = new Configuration()
+     val hdfs = FileSystem.get(hadoopConfig)
+     copyMergeWithHeader(hdfs, new Path(srcPath), hdfs, new Path(dstPath), false, hadoopConfig, header)
+   }
+   @throws[IOException]
+   def copyMergeWithHeader(srcFS: FileSystem, srcDir: Path, dstFS: FileSystem, dstFile: Path, deleteSource: Boolean, conf: Configuration, header: String) = {
+     var dstFile2 = checkDest(srcDir.getName, dstFS, dstFile, false)
+     if (!srcFS.getFileStatus(srcDir).isDir) false
+     else {
+       val out = dstFS.create(dstFile2)
+       if (header != null) out.write((header + "\n").getBytes("UTF-8"))
+       try {
+         val contents = srcFS.listStatus(srcDir)
+         var i = 0
+         while ( {
+           i < contents.length
+         }) {
+           if (!contents(i).isDir) {
+             val in = srcFS.open(contents(i).getPath)
+             try
+               IOUtils.copyBytes(in, out, conf, false)
+             finally in.close()
+           }
+
+           {
+             i += 1; i
+           }
+         }
+       } finally out.close()
+       if (deleteSource) srcFS.delete(srcDir, true)
+       else true
+     }
+   }
+
+   @throws[IOException]
+   private def checkDest(srcName: String, dstFS: FileSystem, dst: Path, overwrite: Boolean): Path = {
+     if (dstFS.exists(dst)) {
+       val sdst = dstFS.getFileStatus(dst)
+       if (sdst.isDir) {
+         if (null == srcName) throw new IOException("Target " + dst + " is a directory")
+         return checkDest(null.asInstanceOf[String], dstFS, new Path(dst, srcName), overwrite)
+       }
+       if (!overwrite) throw new IOException("Target " + dst + " already exists")
+     }
+     dst
+   }
+
+   //   def saveDfToCsv(df: DataFrame, tsvOutput: String): Unit = {
 //     val tmpParquetDir = "s_output"
 ////         towProgsRes.coalesce(1).
 //     // write.format("com.databricks.spark.csv").
