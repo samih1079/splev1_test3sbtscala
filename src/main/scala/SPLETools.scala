@@ -44,7 +44,7 @@ import scala.util.Try
        .format("csv")
        .option("sep", ",")
        .option("inferSchema", "true")
-       .option("header", "true")
+       .option("header", "false")
        .schema(schema)
        .load(csvFile).toDF()
      res

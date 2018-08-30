@@ -12,6 +12,8 @@ import scala.util.hashing.MurmurHash3
 object SimilarityDegree extends App {
 //  val spark =intitSpark()
 
+
+
   //in order to read the result file contaontin relation type: "output/spleres.csv"
   val resChema="prog1 STRING,prog2 STRING,class1 STRING,class2 STRING,use INT,over INT,ext INT,ref INT,ref_ext INT,parametric DOUBLE,subtyping DOUBLE,overloading DOUBLE,total DOUBLE,type STRING"
 
@@ -22,6 +24,9 @@ object SimilarityDegree extends App {
   val fullGraph=buildRelationGraph();
   val vc=fullGraph.vertices.filter{ case (id,(prog,class1))=>prog == "P3"}.count()
   println(vc)
+  val pw = new java.io.PrintWriter("output/myGraph.gexf")
+  pw.write(toGexf(fullGraph))
+  pw.close
 
   def buildRelationGraph(): Graph[(String, String), String] = {
     val relationRes = readRes("output/spleres.csv", resChema)
@@ -48,13 +53,28 @@ object SimilarityDegree extends App {
     val graph = Graph(vert, edges, defaultUser)
     graph
   }
+  def toGexf[VD,ED](g:Graph[VD,ED]) =
+    "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+      "<gexf xmlns=\"http://www.gexf.net/1.2draft\" version=\"1.2\">\n" +
+      "  <graph mode=\"static\" defaultedgetype=\"directed\">\n" +
+      "    <nodes>\n" +
+      g.vertices.map(v => "      <node id=\"" + v._1 + "\" label=\"" +
+        v._2 + "\" />\n").collect.mkString +
+      "    </nodes>\n" +
+      "    <edges>\n" +
+      g.edges.map(e => "      <edge source=\"" + e.srcId +
+        "\" target=\"" + e.dstId + "\" label=\"" + e.attr +
+        "\" />\n").collect.mkString +
+      "    </edges>\n" +
+      "  </graph>\n" +
+      "</gexf>"
+
 
 
   //  val vc=graph.vertices.filter{ case (id,(name,pos))=>pos == "prof"}.count()
   //val graph= Graph.fromEdgeTuples(edges,1);
 
   //graph.triplets.collect.foreach(println)
-  var id:Long=0;
 
 //  val users: RDD[(VertexId, (String, String))] =sc.parallelize(Array((0, ("istoica", "prof")),
 //      (3L, ("rxin", "student")),
