@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Set;
 
 import edu.uci.ics.jung.graph.*;
+import edu.uci.ics.jung.graph.util.EdgeType;
 
 public class Algorithm457<V, E>
     {
@@ -27,6 +28,7 @@ public class Algorithm457<V, E>
 
             this.graph = graph;
         }
+
 
         //~ Methods ----------------------------------------------------------------
 
@@ -147,5 +149,9 @@ public class Algorithm457<V, E>
                 }
             } // of for
             return end;
+        }
+        public static void main(String[] args)
+        {
+
         }
 }

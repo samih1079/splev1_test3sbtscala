@@ -8,6 +8,7 @@ import org.apache.spark.graphx._
 import org.apache.spark.sql.DataFrame
 
 import scala.util.MurmurHash
+import scala.collection.mutable.{ Set => MutableSet }
 import scala.util.hashing.MurmurHash3
 object SimilarityDegree extends App {
 //  val spark =intitSpark()
@@ -34,13 +35,39 @@ val conf=new SparkConf().setAppName("graphtest1").setMaster("local").set("spark.
 //  bk.foreach { println }
 
 //val subg=fullGraph.subgraph(epred = (edge)=> edge.srcAttr._1== "P3")
-val subg=fullGraph.subgraph(vpred = (id,attr)=> attr._1== "P3" || attr._1=="P6")
-println(subg.vertices.count())
+val subg=fullGraph.subgraph(vpred = (id,attr)=> attr._1== "P3" || attr._1 == "P6")
+  println(subg.vertices.count())
+  saveGexf(subg)
+
 
 
   val bk=new BronKerboschSCALA(sc,subg).runAlgorithm
-  bk.foreach { println }
+
+  //bk.foreach { println }
 println(bk.size)
+  var i=0;
+  bk.foreach(s=> {
+    if (i == 0) {
+      getPotionalGraphs(s, fullGraph)
+      i += 1
+    }
+
+    //println(s)
+  }
+  )
+
+
+  def getPotionalGraphs(clique:MutableSet[Long],graph: Graph[(String, String), String]):BSimD={
+  var res = new  BSimD(clique=clique)
+    println("the clique vertx before sub: "+clique)
+      val sub=graph.subgraph(vpred = (id,attr)=>clique.contains(id))
+    println("the clique vertx after sub: "+sub.vertices.count())
+    sub.vertices.foreach(v=> println(v._1))
+
+    res
+  }
+
+
   def buildRelationGraph(): Graph[(String, String), String] = {
     val relationRes = readRes("output/spleres.csv", resChema)
     val resForEdges = relationRes.select("prog1", "class1", "prog2", "class2", "type").rdd;
@@ -82,7 +109,11 @@ println(bk.size)
       "  </graph>\n" +
       "</gexf>"
 
-
+    def saveGexf[VD,ED](graph:Graph[VD,ED]): Unit ={
+        val pw = new java.io.PrintWriter("output/myGraph.gexf")
+        pw.write(toGexf(graph))
+        pw.close
+    }
 
   //  val vc=graph.vertices.filter{ case (id,(name,pos))=>pos == "prof"}.count()
   //val graph= Graph.fromEdgeTuples(edges,1);
