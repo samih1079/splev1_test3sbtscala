@@ -1,3 +1,4 @@
+import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.graphx.{Edge, Graph}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.catalyst.expressions.Murmur3Hash
@@ -12,20 +13,23 @@ object testss extends App {
   println(MurmurHash3.stringHash("abc"))
 
   println(MurmurHash3.stringHash("abc"))
-val sc=SparkContextUtils.getSparkContext
-  val users: RDD[(Long, (String, String))] =
-    sc.parallelize(Array((3L, ("rxin", "student")), (7L, ("jgonzal", "postdoc")),
-      (5L, ("franklin", "prof")), (2L, ("istoica", "prof"))))
-
-  val relationships: RDD[Edge[String]] =
-    sc.parallelize(Array(Edge(3L, 7L, "collab"), Edge(5L, 3L, "advisor"),
-      Edge(2L, 5L, "colleague"), Edge(5L, 7L, "pi")))
-
-  val graph = Graph(users, relationships)
-
-  val bk = new BronKerboschSCALA(sc, graph).runAlgorithm;
-
-  bk.foreach { println }
+//  val conf=new SparkConf().setAppName("graphtest1").setMaster("local").set("spark.driver.allowMultipleContexts", "true");
+//  val sc: SparkContext=new SparkContext(conf)
+//  sc.setLogLevel("ERROR")
+//val sc=SparkContextUtils.getSparkContext
+//  val users: RDD[(Long, (String, String))] =
+//    sc.parallelize(Array((3L, ("rxin", "student")), (7L, ("jgonzal", "postdoc")),
+//      (5L, ("franklin", "prof")), (2L, ("istoica", "prof"))))
+//
+//  val relationships: RDD[Edge[String]] =
+//    sc.parallelize(Array(Edge(3L, 7L, "collab"), Edge(5L, 3L, "advisor"),
+//      Edge(2L, 5L, "colleague"), Edge(5L, 7L, "pi")))
+//
+//  val graph = Graph(users, relationships)
+//
+//  val bk = new BronKerboschSCALA(sc, graph).runAlgorithm;
+//
+//  bk.foreach { println }
 
   val s:String ="SET NOCOUNT ON;" +
     "CREATE TABLE #tree(node_l CHAR(1),node_r CHAR(1));" +

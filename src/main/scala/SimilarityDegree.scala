@@ -26,16 +26,21 @@ object SimilarityDegree extends App {
 //  val pw = new java.io.PrintWriter("output/myGraph.gexf")
 //  pw.write(toGexf(fullGraph))
 //  pw.close
- // val sc=SparkContextUtils.getSparkContext
-//val bk = new BronKerboschSCALA(sc, fullGraph).runAlgorithm;
+val conf=new SparkConf().setAppName("graphtest1").setMaster("local").set("spark.driver.allowMultipleContexts", "true");
+  //val sc: SparkContext=new SparkContext(conf)
+  val sc = SparkContext.getOrCreate()
+  sc.setLogLevel("ERROR")//val bk = new BronKerboschSCALA(sc, fullGraph).runAlgorithm;
 //
 //  bk.foreach { println }
 
-val subg=fullGraph.subgraph(epred = (edge)=> edge.srcAttr._1== "P3")
+//val subg=fullGraph.subgraph(epred = (edge)=> edge.srcAttr._1== "P3")
+val subg=fullGraph.subgraph(vpred = (id,attr)=> attr._1== "P3" || attr._1=="P6")
 println(subg.vertices.count())
 
 
-
+  val bk=new BronKerboschSCALA(sc,subg).runAlgorithm
+  bk.foreach { println }
+println(bk.size)
   def buildRelationGraph(): Graph[(String, String), String] = {
     val relationRes = readRes("output/spleres.csv", resChema)
     val resForEdges = relationRes.select("prog1", "class1", "prog2", "class2", "type").rdd;
