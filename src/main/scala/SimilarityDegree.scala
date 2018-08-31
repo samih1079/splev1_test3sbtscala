@@ -18,15 +18,23 @@ object SimilarityDegree extends App {
   val resChema="prog1 STRING,prog2 STRING,class1 STRING,class2 STRING,use INT,over INT,ext INT,ref INT,ref_ext INT,parametric DOUBLE,subtyping DOUBLE,overloading DOUBLE,total DOUBLE,type STRING"
 
   // Assume the SparkContext has already been constructed
-  val conf=new SparkConf().setAppName("graphtest1").setMaster("local").set("spark.driver.allowMultipleContexts", "true");
-  val sc: SparkContext=new SparkContext(conf)
 
   val fullGraph=buildRelationGraph();
-  val vc=fullGraph.vertices.filter{ case (id,(prog,class1))=>prog == "P3"}.count()
-  println(vc)
-  val pw = new java.io.PrintWriter("output/myGraph.gexf")
-  pw.write(toGexf(fullGraph))
-  pw.close
+//  val vc=fullGraph.vertices.filter{ case (id,(prog,class1))=>prog == "P3" || prog=="p6"}.count()
+//  println(vc)
+  //to visualization
+//  val pw = new java.io.PrintWriter("output/myGraph.gexf")
+//  pw.write(toGexf(fullGraph))
+//  pw.close
+ // val sc=SparkContextUtils.getSparkContext
+//val bk = new BronKerboschSCALA(sc, fullGraph).runAlgorithm;
+//
+//  bk.foreach { println }
+
+val subg=fullGraph.subgraph(epred = (edge)=> edge.srcAttr._1== "P3")
+println(subg.vertices.count())
+
+
 
   def buildRelationGraph(): Graph[(String, String), String] = {
     val relationRes = readRes("output/spleres.csv", resChema)
@@ -43,7 +51,7 @@ object SimilarityDegree extends App {
     //
     val vert: RDD[(VertexId, (String, String))] = progclassUnion.rdd.map(
       r => (MurmurHash3.stringHash(r.getString(0) + "_" + r.getString(1)), //fo example hashing : p1_Model.Answer
-        (r.getString(0), //fist label is the class name
+        (r.getString(0), //fist label is the PROGRAM name
           r.getString(1))))
     //second label is the program name
     val defaultUser = ("John Doe", "Missing")
