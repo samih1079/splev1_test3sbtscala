@@ -1,35 +1,100 @@
 import org.apache.spark.{SparkConf, SparkContext}
-import org.apache.spark.graphx.{Edge, Graph}
+import org.apache.spark.graphx._
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.catalyst.expressions.Murmur3Hash
 
+import scala.collection.mutable.ListBuffer
 import scala.util.MurmurHash
 import scala.util.hashing.MurmurHash3
+import scala.collection.mutable.Map
+
 
 object testss extends App {
 
   //var h:Murmur3Hash=new
-  println(MurmurHash3.stringHash("abc"))
-  println(MurmurHash3.stringHash("abc"))
-
-  println(MurmurHash3.stringHash("abc"))
-//  val conf=new SparkConf().setAppName("graphtest1").setMaster("local").set("spark.driver.allowMultipleContexts", "true");
-//  val sc: SparkContext=new SparkContext(conf)
-//  sc.setLogLevel("ERROR")
+//  println(MurmurHash3.stringHash("abc"))
+//  println(MurmurHash3.stringHash("abc"))
+//
+//  println(MurmurHash3.stringHash("abc"))
+val conf=new SparkConf().setAppName("graphtest1").setMaster("local").set("spark.driver.allowMultipleContexts", "true");
+val sc = SparkContext.getOrCreate(conf)
+ sc.setLogLevel("ERROR")
 //val sc=SparkContextUtils.getSparkContext
-//  val users: RDD[(Long, (String, String))] =
-//    sc.parallelize(Array((3L, ("rxin", "student")), (7L, ("jgonzal", "postdoc")),
-//      (5L, ("franklin", "prof")), (2L, ("istoica", "prof"))))
+  val users: RDD[(Long, (String, String))] =
+    sc.parallelize(Array((3L, ("rxin", "student")), (7L, ("jgonzal", "postdoc")),
+      (5L, ("franklin", "prof")), (2L, ("istoica", "prof")),(8L, ("samih", "dr"))))
+
+  val relationships: RDD[Edge[String]] =
+    sc.parallelize(Array(Edge(3L, 2L, "collab"), Edge(8L, 3L, "advisor"),
+      Edge(2L, 5L, "colleague"), Edge(8L, 7L, "pi")))
+
+  val graph = Graph(users, relationships)
+  val sourceVertexId: VertexId = 3L // vertex a in the example
+ // val edgeProperty: String = "e1"
+
+  // Filter the graph to contain only edges matching the edgeProperty
+  val filteredG = graph.subgraph(epred = e => e.attr != "collab")
+
+  // Find the connected components of the subgraph, and cache it because we
+  // use it more than once below
+  var vset:Set[Long] = Set[Long]()
+  val components: VertexRDD[VertexId] =
+  filteredG.connectedComponents().vertices.cache()
+  graph.vertices.collect().foreach(v=> {
+    vset=vset+v._1
+    println(v._1)
+  })
+  println("size:"+vset.size)
+  println()
+  println(MySetUtils.power3(vset, 2).size)
+ vset=Set(3,2,5,7,8)
+  val subg=graph.subgraph(vpred = (id,attr) => vset.contains(id)).cache()
+  private val neighbourVerticesMap = subg.collectNeighborIds(EdgeDirection.Either)
+    .collect().map(vertex => (vertex._1.asInstanceOf[Long], vertex._2.toSet))
+    .toMap;
+  neighbourVerticesMap.foreach(v=>println("NeighborIds:"+v))
+  println(MySetUtils.isConnectedGraph(subg))
+  //******** tests: map List
+//  neighbourVerticesMap.foreach(v=>println("NeighborIds:"+v))
+//  var q:ListBuffer[Long]=ListBuffer();
+//  var visited:Map[Long,Boolean]=Map()
+//  q+=neighbourVerticesMap.head._1;
+//  neighbourVerticesMap.foreach(k=> {
+//    visited += (k._1 -> false)
+//  })
+//  neighbourVerticesMap.get(7).foreach(u=>u.foreach(x=>println(x)))
+//  q+=20;
+//  q+=(30,33)
+//  println(" q: ")
+//    q.foreach(c=>print(+c))
 //
-//  val relationships: RDD[Edge[String]] =
-//    sc.parallelize(Array(Edge(3L, 7L, "collab"), Edge(5L, 3L, "advisor"),
-//      Edge(2L, 5L, "colleague"), Edge(5L, 7L, "pi")))
+//  println(" q: ")
+//  q-=q.head
+//  q.foreach(c=>print(" "+c))
 //
-//  val graph = Graph(users, relationships)
+//  println()
+//  println("visited:"+visited)
 //
-//  val bk = new BronKerboschSCALA(sc, graph).runAlgorithm;
+//  visited.update(q.head,true)
+//  println("visited:"+visited)
 //
-//  bk.foreach { println }
+//  val conng=MySetUtils.getBFS(vset.head,subg).cache()
+//  subg.vertices.foreach(v=> println("subg:"+v._2))
+//
+//  conng.vertices.foreach(v=>println("conng"+v._1+ " "+ v._2))
+
+  // Get the component id of the source vertex
+//  val sourceComponent: VertexId = components.filter {
+//    case (id, component) => id == sourceVertexId
+//  }.map(_._2).collect().head
+//
+//  // Print the vertices in that component
+//  components.filter {
+//    case (id, component) => component == sourceComponent
+//  }.map(_._1).collect.foreach(println)
+  //val bk = new BronKerboschSCALA(sc, graph).runAlgorithm;
+
+  //bk.foreach { println }
 
   val s:String ="SET NOCOUNT ON;" +
     "CREATE TABLE #tree(node_l CHAR(1),node_r CHAR(1));" +

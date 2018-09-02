@@ -62,7 +62,12 @@ println(bk.size)
     println("the clique vertx before sub: "+clique)
       val sub=graph.subgraph(vpred = (id,attr)=>clique.contains(id))
     println("the clique vertx after sub: "+sub.vertices.count())
-    sub.vertices.foreach(v=> println(v._1))
+    sub.edges.foreach(edge=> {
+      if(edge.attr=="parametric") res.ps+=1
+      if(edge.attr=="overloading") res.os+=1
+      if(edge.attr=="subtyping") res.ss+=1
+
+    })
 
     res
   }
@@ -88,8 +93,8 @@ println(bk.size)
     //second label is the program name
     val defaultUser = ("John Doe", "Missing")
     //
-    //  // Build the initial Graph
-    // val g2=Graph.fromEdges(edges,"");
+    //  // Build the initial MyGraph
+    // val g2=MyGraph.fromEdges(edges,"");
     val graph = Graph(vert, edges, defaultUser)
     graph
   }
@@ -116,7 +121,7 @@ println(bk.size)
     }
 
   //  val vc=graph.vertices.filter{ case (id,(name,pos))=>pos == "prof"}.count()
-  //val graph= Graph.fromEdgeTuples(edges,1);
+  //val graph= MyGraph.fromEdgeTuples(edges,1);
 
   //graph.triplets.collect.foreach(println)
 
@@ -131,8 +136,8 @@ println(bk.size)
 //  // Define a default user in case there are relationship with missing user
 //  val defaultUser = ("John Doe", "Missing")
 //
-//  // Build the initial Graph
-//  val graph = Graph(users, relationships, defaultUser)
+//  // Build the initial MyGraph
+//  val graph = MyGraph(users, relationships, defaultUser)
 //  val vc=graph.vertices.filter{ case (id,(name,pos))=>pos == "prof"}.count()
 //  val ec=graph.edges.filter(e=>e.srcId>e.dstId).count()
 //  val facts:RDD[String]=graph.triplets.map(triple=>triple.srcAttr._1+" is the "+triple.attr+ "of "+triple.dstAttr._1)
