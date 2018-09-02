@@ -25,35 +25,38 @@ val sc = SparkContext.getOrCreate(conf)
       (5L, ("franklin", "prof")), (2L, ("istoica", "prof")),(8L, ("samih", "dr"))))
 
   val relationships: RDD[Edge[String]] =
-    sc.parallelize(Array(Edge(3L, 2L, "collab"), Edge(8L, 3L, "advisor"),
-      Edge(2L, 5L, "colleague"), Edge(8L, 7L, "pi")))
+    sc.parallelize(Array(Edge(3L, 2L, "parametric"), Edge(8L, 3L, "parametric"),
+      Edge(2L, 5L, "overloading"), Edge(8L, 7L, "subtyping")))
 
   val graph = Graph(users, relationships)
-  val sourceVertexId: VertexId = 3L // vertex a in the example
+//  val sourceVertexId: VertexId = 3L // vertex a in the example
  // val edgeProperty: String = "e1"
 
   // Filter the graph to contain only edges matching the edgeProperty
-  val filteredG = graph.subgraph(epred = e => e.attr != "collab")
-
+  //val filteredG = graph.subgraph(epred = e => e.attr != "collab")
+//  val components: VertexRDD[VertexId] =
+  //  filteredG.connectedComponents().vertices.cache()
   // Find the connected components of the subgraph, and cache it because we
   // use it more than once below
   var vset:Set[Long] = Set[Long]()
-  val components: VertexRDD[VertexId] =
-  filteredG.connectedComponents().vertices.cache()
+//
   graph.vertices.collect().foreach(v=> {
     vset=vset+v._1
     println(v._1)
   })
   println("size:"+vset.size)
   println()
-  println(MySetUtils.power3(vset, 2).size)
- vset=Set(3,2,5,7,8)
-  val subg=graph.subgraph(vpred = (id,attr) => vset.contains(id)).cache()
-  private val neighbourVerticesMap = subg.collectNeighborIds(EdgeDirection.Either)
-    .collect().map(vertex => (vertex._1.asInstanceOf[Long], vertex._2.toSet))
-    .toMap;
-  neighbourVerticesMap.foreach(v=>println("NeighborIds:"+v))
-  println(MySetUtils.isConnectedGraph(subg))
+  MySetUtils.power3(vset, 2).foreach(u=>{
+    val sub=graph.subgraph(vpred = (id,attr)=>u.contains(id))
+    println(MySetUtils.isConnectedGraph(sub))
+  })
+ //vset=Set(30)
+//  val subg=graph.subgraph(vpred = (id,attr) => vset.contains(id)).cache()
+//  private val neighbourVerticesMap = subg.collectNeighborIds(EdgeDirection.Either)
+//    .collect().map(vertex => (vertex._1.asInstanceOf[Long], vertex._2.toSet))
+//    .toMap;
+//  neighbourVerticesMap.foreach(v=>println("NeighborIds:"+v))
+//  println(MySetUtils.isConnectedGraph(subg))
   //******** tests: map List
 //  neighbourVerticesMap.foreach(v=>println("NeighborIds:"+v))
 //  var q:ListBuffer[Long]=ListBuffer();

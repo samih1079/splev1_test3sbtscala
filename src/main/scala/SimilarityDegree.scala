@@ -57,15 +57,16 @@ println(bk.size)
   )
 
 
-  def getPotionalGraphs(clique:MutableSet[Long],graph: Graph[(String, String), String]):BSimD={
-  var res = new  BSimD(clique=clique)
-    println("the clique vertx before sub: "+clique)
-      val sub=graph.subgraph(vpred = (id,attr)=>clique.contains(id))
+  def getPotionalGraphs(subg:MutableSet[Long],graph: Graph[(String, String), String]):BSimD={
+  var res = new  BSimD(subGraph=subg)
+    println("the clique vertx before sub: "+subg)
+      val sub=graph.subgraph(vpred = (id,attr)=>subg.contains(id))
     println("the clique vertx after sub: "+sub.vertices.count())
     sub.edges.foreach(edge=> {
       if(edge.attr=="parametric") res.ps+=1
       if(edge.attr=="overloading") res.os+=1
       if(edge.attr=="subtyping") res.ss+=1
+      if(edge.attr=="none") res.ns +=1
 
     })
 

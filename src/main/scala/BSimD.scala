@@ -1,11 +1,9 @@
 import scala.collection.mutable.{ Set => MutableSet }
 
-case class BSimD (var ps:Double=0,var ss:Double=0,var os:Double=0,var clique:MutableSet[Long]){
+case class BSimD (var ps:Int=0,var ss:Int=0,var os:Int=0, var ns: Int=0, subGraph:MutableSet[Long]){
 
-  def psv()=ps
-  def ssv()=ss
-  def osv()=os
-  def grVerSet()=clique
+
+
 
 
 }

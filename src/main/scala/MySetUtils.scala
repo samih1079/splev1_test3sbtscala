@@ -61,7 +61,8 @@ object MySetUtils {
   }
 
   def isConnectedGraph(graph:Graph[(String,String),String]): Boolean={
-    var check:Boolean =true
+
+    if(graph.edges.count()==0) return false
      val neighbourVerticesMap = graph.collectNeighborIds(EdgeDirection.Either)
       .collect().map(vertex => (vertex._1.asInstanceOf[Long], vertex._2.toSet))
       .toMap;
