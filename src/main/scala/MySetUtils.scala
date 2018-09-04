@@ -71,7 +71,7 @@ object MySetUtils {
      val neighbourVerticesMap = graph.collectNeighborIds(EdgeDirection.Either)
       .collect().map(vertex => (vertex._1.asInstanceOf[Long], vertex._2.toSet))
       .toMap;
-    neighbourVerticesMap.foreach(v=>println("NeighborIds:"+v))
+    //neighbourVerticesMap.foreach(v=>println("NeighborIds:"+v))
     var q:ListBuffer[Long]=ListBuffer();
     var visited:Map[Long,Boolean]=Map()
     q+=neighbourVerticesMap.head._1;
@@ -82,7 +82,7 @@ object MySetUtils {
 //    println("visited:"+visited)
     visited.update(q.head,true)
     var countVisitred=1;
-    println("component: ")
+    //println("component: ")
     while (q.size>0)
       {
         val h=q.head

@@ -1,12 +1,7 @@
 import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.graphx._
 import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.catalyst.expressions.Murmur3Hash
 
-import scala.collection.mutable.ListBuffer
-import scala.util.MurmurHash
-import scala.util.hashing.MurmurHash3
-import scala.collection.mutable.Map
 
 
 object testss extends App {
@@ -42,23 +37,27 @@ val sc = SparkContext.getOrCreate(conf)
 //
   graph.vertices.collect().foreach(v=> {
     vset=vset+v._1
-    print(v._1+",")
+  //  print(v._1+",")
   })
-  println("size:"+vset.size)
-  println()
+  //println("size:"+vset.size)
+ // println()
   var allPotinalGraph:Set[MColorBSD]=Set()
   MySetUtils.power3(vset, 2).foreach(u=>{
-    println("U:"+u)
+ //   println("U:"+u)
     val sub=graph.subgraph(vpred = (id,attr)=>u.contains(id)).cache()
     if(MySetUtils.isConnectedGraph(sub))
       {
+
         val tmp:MColorBSD=new MColorBSD(sub);
         tmp.compute()
         allPotinalGraph+=tmp;
       }
   })
-  println("allPotinalGraph:")
-  allPotinalGraph.foreach(s=>println(s))
+  println("allPotinalGraph:"+allPotinalGraph.size)
+  allPotinalGraph.foreach(s=>{
+    s.subg.edges.foreach(e=> println(e))
+    println(s)
+  })
     //    println("edgs")
 //    sub.edges.foreach(e=>print(e))
 //    println()
