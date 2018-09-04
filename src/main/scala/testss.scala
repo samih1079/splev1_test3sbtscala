@@ -42,14 +42,34 @@ val sc = SparkContext.getOrCreate(conf)
 //
   graph.vertices.collect().foreach(v=> {
     vset=vset+v._1
-    println(v._1)
+    print(v._1+",")
   })
   println("size:"+vset.size)
   println()
+  var allPotinalGraph:Set[MColorBSD]=Set()
   MySetUtils.power3(vset, 2).foreach(u=>{
-    val sub=graph.subgraph(vpred = (id,attr)=>u.contains(id))
-    println(MySetUtils.isConnectedGraph(sub))
+    println("U:"+u)
+    val sub=graph.subgraph(vpred = (id,attr)=>u.contains(id)).cache()
+    if(MySetUtils.isConnectedGraph(sub))
+      {
+        val tmp:MColorBSD=new MColorBSD(sub);
+        tmp.compute()
+        allPotinalGraph+=tmp;
+      }
   })
+  println("allPotinalGraph:")
+  allPotinalGraph.foreach(s=>println(s))
+    //    println("edgs")
+//    sub.edges.foreach(e=>print(e))
+//    println()
+//    println("verts")
+//    sub.vertices.foreach(e=>print(e))
+//    println()
+//    val neighbourVerticesMap = sub.collectNeighborIds(EdgeDirection.Either)
+//      .collect().map(vertex => (vertex._1.asInstanceOf[Long], vertex._2.toSet))
+//      .toMap;
+//    neighbourVerticesMap.foreach(v=>println("NeighborIds:"+v))
+
  //vset=Set(30)
 //  val subg=graph.subgraph(vpred = (id,attr) => vset.contains(id)).cache()
 //  private val neighbourVerticesMap = subg.collectNeighborIds(EdgeDirection.Either)

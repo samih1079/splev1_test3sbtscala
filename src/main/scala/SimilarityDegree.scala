@@ -34,44 +34,14 @@ val conf=new SparkConf().setAppName("graphtest1").setMaster("local").set("spark.
 //
 //  bk.foreach { println }
 
-//val subg=fullGraph.subgraph(epred = (edge)=> edge.srcAttr._1== "P3")
-val subg=fullGraph.subgraph(vpred = (id,attr)=> attr._1== "P3" || attr._1 == "P6")
+//test visual Graph
+  val subg=fullGraph.subgraph(vpred = (id,attr)=> attr._1== "P3" || attr._1 == "P6")
   println(subg.vertices.count())
   saveGexf(subg)
 
 
 
-  val bk=new BronKerboschSCALA(sc,subg).runAlgorithm
 
-  //bk.foreach { println }
-println(bk.size)
-  var i=0;
-  bk.foreach(s=> {
-    if (i == 0) {
-      getPotionalGraphs(s, fullGraph)
-      i += 1
-    }
-
-    //println(s)
-  }
-  )
-
-
-  def getPotionalGraphs(subg:MutableSet[Long],graph: Graph[(String, String), String]):BSimD={
-  var res = new  BSimD(subGraph=subg)
-    println("the clique vertx before sub: "+subg)
-      val sub=graph.subgraph(vpred = (id,attr)=>subg.contains(id))
-    println("the clique vertx after sub: "+sub.vertices.count())
-    sub.edges.foreach(edge=> {
-      if(edge.attr=="parametric") res.ps+=1
-      if(edge.attr=="overloading") res.os+=1
-      if(edge.attr=="subtyping") res.ss+=1
-      if(edge.attr=="none") res.ns +=1
-
-    })
-
-    res
-  }
 
 
   def buildRelationGraph(): Graph[(String, String), String] = {

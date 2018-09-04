@@ -1,5 +1,4 @@
 import org.apache.spark.graphx.{EdgeDirection, Graph, VertexId}
-import testss.neighbourVerticesMap
 import scala.collection.mutable.Map
 import scala.collection.mutable.ListBuffer
 object MySetUtils {
@@ -63,25 +62,31 @@ object MySetUtils {
   def isConnectedGraph(graph:Graph[(String,String),String]): Boolean={
 
     if(graph.edges.count()==0) return false
+//    println("edgs")
+//    graph.edges.foreach(e=>print(e))
+//    println()
+//    println("verts")
+//    graph.vertices.foreach(e=>print(e))
+//    println()
      val neighbourVerticesMap = graph.collectNeighborIds(EdgeDirection.Either)
       .collect().map(vertex => (vertex._1.asInstanceOf[Long], vertex._2.toSet))
       .toMap;
-    //neighbourVerticesMap.foreach(v=>println("NeighborIds:"+v))
+    neighbourVerticesMap.foreach(v=>println("NeighborIds:"+v))
     var q:ListBuffer[Long]=ListBuffer();
     var visited:Map[Long,Boolean]=Map()
     q+=neighbourVerticesMap.head._1;
     neighbourVerticesMap.foreach(k=> {
       visited += (k._1 -> false)
     })
-    q.foreach(c=>print("q"+c))
-    println("visited:"+visited)
+//    q.foreach(c=>print("q"+c))
+//    println("visited:"+visited)
     visited.update(q.head,true)
     var countVisitred=1;
     println("component: ")
     while (q.size>0)
       {
         val h=q.head
-        println(h)
+//        println(h)
         q-=q.head;
        neighbourVerticesMap.get(h).foreach(u=>u.foreach(x=>{
          if(visited.get(x).head==false)
