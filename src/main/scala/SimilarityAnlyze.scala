@@ -4,11 +4,18 @@ import SPLETools._
 
 object SimilarityAnlyze extends App {
   val spark =intitSpark()
-  val peopleDFCsv:DataFrame =read("debugInfo_1533200012911fxd.csv")
- // println(peopleDFCsv.schema)
+
+  var sourceSchema="method1 STRING,class1	STRING,program1	STRING,method2	STRING,class2	STRING,program2	STRING," +
+    "params1 STRING,params2 STRING,return1 STRING,return2 STRING,used1 STRING,used2	STRING," +
+    "mod1	STRING,mod2	STRING,shallow	STRING,deep	STRING,result STRING"
+
+  val sourceCsv:DataFrame =read("debugInfo_1533200012911fxd.csv")
+  //val sourceCsv:DataFrame =readWithSchema("debugInfo_1533200012911.csv",sourceSchema)
+
+  // println(peopleDFCsv.schema)
   //peopleDFCsv.columns.foreach(c=>println(c))
   import spark.implicits._
-  val res=countResultNoNullForEachProg(peopleDFCsv)
+  val res=countResultNoNullForEachProg(sourceCsv)
 
   showClassesResultForEachProgPair(res)
 

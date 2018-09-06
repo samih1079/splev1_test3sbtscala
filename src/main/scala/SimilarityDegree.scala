@@ -39,13 +39,37 @@ val conf=new SparkConf().setAppName("graphtest1").setMaster("local").set("spark.
   println(subg.vertices.count())
   saveGexf(subg)
 
-
+  var vset:Set[Long] = Set[Long]()
+  //
+  subg.vertices.collect().foreach(v=> {
+    vset=vset+v._1
+    //  print(v._1+",")
+  })
+  println("size:"+vset.size)
+  // println()
+  var allPotinalGraph:Set[MColorBSD]=Set()
+  MySetUtils.power3(vset, 2).foreach(u=>{
+    println("U:"+u)
+    val sub=subg.subgraph(vpred = (id,attr)=>u.contains(id)).cache()
+    if(MySetUtils.isConnectedGraph(sub))
+    {
+      print("wait.")
+      val tmp:MColorBSD=new MColorBSD(sub);
+      tmp.compute()
+      allPotinalGraph+=tmp;
+    }
+  })
+  println("allPotinalGraph:"+allPotinalGraph.size)
+  allPotinalGraph.foreach(s=>{
+    s.subg.edges.foreach(e=> println(e))
+    println(s)
+  })
 
 
 
 
   def buildRelationGraph(): Graph[(String, String), String] = {
-    val relationRes = readRes("output/spleres.csv", resChema)
+    val relationRes = readWithSchema("output/spleres.csv", resChema)
     val resForEdges = relationRes.select("prog1", "class1", "prog2", "class2", "type").rdd;
     //val edges:RDD[(VertexId,VertexId)]=res.map(r=>(MurmurHash3.stringHash(r.getString(0))  ,MurmurHash3.stringHash(r.getString(1))))
     //edge: p1class1--[type]--p2class2

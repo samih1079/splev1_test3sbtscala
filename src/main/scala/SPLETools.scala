@@ -25,7 +25,7 @@ import scala.util.Try
   def read(csvFile:String): DataFrame =
   {
     spark.sparkContext.setLogLevel("ERROR")
-    val peopleDFCsv = spark
+    val res = spark
       .read
       .format("csv")
       .option("sep", ",")
@@ -33,10 +33,10 @@ import scala.util.Try
       .option("header", "true")
 
       .load(csvFile).toDF()
-    peopleDFCsv
+    res
   }
 
-   def readRes(csvFile:String,schema:String): DataFrame =
+   def readWithSchema(csvFile:String, schema:String): DataFrame =
    {
      spark.sparkContext.setLogLevel("ERROR")
      val res = spark
