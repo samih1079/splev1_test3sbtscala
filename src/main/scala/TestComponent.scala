@@ -23,6 +23,7 @@ println("kkk")
   //val cc=graph.connectedComponents().edges.foreach(println)
 //given a VertexId in a source graph, create a new graph with the nodes and edges connected to this VertexId from
 // the source graph.
+  //....
   val vrid=7
   val newGraph = Graph(
     graph.vertices.filter{case (vid,attr) => vid == vrid} ++
