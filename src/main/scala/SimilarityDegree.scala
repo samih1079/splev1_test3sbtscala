@@ -5,6 +5,7 @@ import org.apache.spark.graphx
 import org.apache.spark.rdd.RDD
 import SPLETools.{spark, _}
 import org.apache.spark.graphx._
+import MyGraphNdSetUtils._
 import org.apache.spark.sql.DataFrame
 
 import scala.util.MurmurHash
@@ -48,10 +49,10 @@ val conf=new SparkConf().setAppName("graphtest1").setMaster("local").set("spark.
   println("size:"+vset.size)
   // println()
   var allPotinalGraph:Set[MColorBSD]=Set()
-  MySetUtils.power3(vset, 2).foreach(u=>{
+  MyGraphNdSetUtils.power3(vset, 2).foreach(u=>{
     println("U:"+u)
     val sub=subg.subgraph(vpred = (id,attr)=>u.contains(id)).cache()
-    if(MySetUtils.isConnectedGraph(sub))
+    if(MyGraphNdSetUtils.isConnectedGraph(sub))
     {
       print("wait.")
       val tmp:MColorBSD=new MColorBSD(sub);
@@ -67,6 +68,41 @@ val conf=new SparkConf().setAppName("graphtest1").setMaster("local").set("spark.
 
 
 
+  /**
+    * compute all M-color for each class in Prog
+    * @param graph full graph with egdes's attr:para sub over
+    * @param pro program name
+    * @param m  minimal number of related program
+    * @return a set of McoloBSD conatainas all metreics includes the sub graph
+    */
+  def getMColorForPRog(graph: Graph[(String,String),String], pro:String,m:Int):Set[MColorBSD]={
+    var mset:Set[MColorBSD]=Set()
+    //var cset:Map[Long,String]=Map()
+    println("getMColorForPRog cset:")
+    graph.vertices.collect().filter { case (id, (prog, klass)) => prog == pro }foreach(v=>{
+      //cset+= (v._1->v._2._2)
+      println(pro+":"+v._2._2)
+      val ccg=getComponentByVr(graph,v._1)
+      val tmp:MColorBSD=new MColorBSD(ccg);
+      tmp.compute()
+      println(tmp)
+      if(tmp.m_color>=m)
+      {
+        mset+=tmp
+      }
+    })
+//    cset.foreach(s=>{
+//
+//    })
+    println(mset.size)
+    mset
+  }
+
+  def getMcolorPrVDSetByForProgram(graph: Graph[(String,String),String], pro:String,m:Int):Set[MColordPrVD]={
+    var reSet:Set[MColordPrVD]=Set()
+    val mcSet:Set[MColorBSD]=getMColorForPRog(graph,pro,m)
+    reSet
+  }
 
   def buildRelationGraph(): Graph[(String, String), String] = {
     val relationRes = readWithSchema("output/spleres.csv", resChema)
@@ -93,6 +129,9 @@ val conf=new SparkConf().setAppName("graphtest1").setMaster("local").set("spark.
     val graph = Graph(vert, edges, defaultUser)
     graph
   }
+
+
+
   def toGexf[VD,ED](g:Graph[VD,ED]) =
     "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
       "<gexf xmlns=\"http://www.gexf.net/1.2draft\" version=\"1.2\">\n" +

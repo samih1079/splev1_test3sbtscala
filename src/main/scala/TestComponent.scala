@@ -1,7 +1,8 @@
 import org.apache.spark.graphx.lib.ConnectedComponents
 import org.apache.spark.{SparkConf, SparkContext}
-import org.apache.spark.graphx.{Edge, EdgeDirection, Graph, VertexId}
+import org.apache.spark.graphx._
 import org.apache.spark.rdd.RDD
+import MyGraphNdSetUtils._
 
 import scala.reflect.ClassTag
 
@@ -13,41 +14,44 @@ println("kkk")
   //val sc=SparkContextUtils.getSparkContext
   val users: RDD[(Long, (String, String))] =
     sc.parallelize(Array((3L, ("p1", "c11")), (7L, ("p1", "c12")),
-      (5L, ("p2", "c21")), (2L, ("p2", "c22")),(8L, ("p3", "c31"))))
+      (5L, ("p2", "c21")), (2L, ("p2", "c22")),(8L, ("p3", "c31")),(9L, ("p3", "c32"))))
 
   val relationships: RDD[Edge[String]] =
     sc.parallelize(Array(Edge(3L, 2L, "parametric"), Edge(5L, 3L, "parametric"),
-      Edge(2L, 5L, "overloading"), Edge(8L, 7L, "subtyping")))
+      Edge(9L, 5L, "overloading"), Edge(8L, 7L, "subtyping"),Edge(2L, 9L, "subtyping")))
 
   val graph = Graph(users, relationships)
   //val cc=graph.connectedComponents().edges.foreach(println)
 //given a VertexId in a source graph, create a new graph with the nodes and edges connected to this VertexId from
 // the source graph.
   //....
-  val vrid=7
-  val newGraph = Graph(
-    graph.vertices.filter{case (vid,attr) => vid == vrid} ++
-      graph.collectNeighbors(EdgeDirection.Either)
-        .filter{ case (vid,arr) => vid == vrid}
-        .flatMap{ case (vid,arr) => arr},
-    graph.edges
-  ).subgraph(vpred = { case (vid,attr) => attr != null}).edges.foreach(println)
+  //val vrid=8
+  SimilarityDegree.getMColorForPRog(graph,"p1",2)
+//  println("connectedComponents():")
+//  getComponentByVr(graph.subgraph(epred = e=> e.attr=="parametric"),2).edges.foreach(println)
 
 
-  def getComponent[VD: ClassTag, ED: ClassTag](g: Graph[VD, ED], component: VertexId): Graph[VD, ED] = {
-    val cc: Graph[VertexId, ED] = ConnectedComponents.run(g)
-    // Join component ID to the original graph.
-    val joined = g.outerJoinVertices(cc.vertices) {
-      (vid, vd, cc) => (vd, cc)
-    }
-    // Filter by component ID.
-    val filtered = joined.subgraph(vpred = {
-      (vid, vdcc) => vdcc._2 == Some(component)
-    })
-    // Discard component IDs.
-    filtered.mapVertices {
-      (vid, vdcc) => vdcc._1
-    }
-  }
+  //  val sourceVertexId: VertexId = 3L // vertex a in the example
+//  val edgeProperty: String = "e1"
+//
+//  // Filter the graph to contain only edges matching the edgeProperty
+//  val filteredG = graph//.subgraph(epred = e => e.attr != edgeProperty)
+//
+//  // Find the connected components of the subgraph, and cache it because we
+//  // use it more than once below
+//  val components: VertexRDD[VertexId] =
+//  filteredG.connectedComponents().vertices.cache()
+//
+//  // Get the component id of the source vertex
+//  val sourceComponent: VertexId = components.filter {
+//    case (id, component) => id == sourceVertexId
+//  }.map(_._2).collect().head
+//
+//  // Print the vertices in that component
+//  components.filter {
+//    case (id, component) => component == sourceComponent
+//  }.map(_._1).collect.foreach(println)
+
+
 
 }

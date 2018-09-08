@@ -39,10 +39,10 @@ object Testsubg_checj_connected {
   //println("size:"+vset.size)
   // println()
   var allPotinalGraph:Set[MColorBSD]=Set()
-  MySetUtils.power3(vset, 2).foreach(u=>{
+  MyGraphNdSetUtils.power3(vset, 2).foreach(u=>{
     //   println("U:"+u)
     val sub=graph.subgraph(vpred = (id,attr)=>u.contains(id)).cache()
-    if(MySetUtils.isConnectedGraph(sub))
+    if(MyGraphNdSetUtils.isConnectedGraph(sub))
     {
 
       val tmp:MColorBSD=new MColorBSD(sub);
