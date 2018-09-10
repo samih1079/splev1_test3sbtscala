@@ -103,7 +103,7 @@ val conf=new SparkConf().setAppName("graphtest1").setMaster("local").set("spark.
     val mcSet:Set[MColorBSD]=getMColorForPRog(graph,pro,m)
     var mset:Set[MColorBSD]=Set()
 
-    var cpv=0;var csv=0;var cov=0;var cpsv=0;
+    var cpv:Long=0;var csv:Long=0;var cov:Long=0;var cpsv:Long=0;
     graph.vertices.collect().filter { case (id, (prog, klass)) => prog == pro }foreach(v=>{
       //cset+= (v._1->v._2._2)
       println("getMcolorPrVDSetByForProgram:"+pro+":"+v._2._2)
