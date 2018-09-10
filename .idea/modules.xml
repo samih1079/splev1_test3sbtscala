@@ -2,8 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/splev1_test3sbtscala-build.iml" filepath="$PROJECT_DIR$/.idea/modules/splev1_test3sbtscala-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/test3sbtscala.iml" filepath="$PROJECT_DIR$/.idea/modules/test3sbtscala.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/test3sbtscala-build.iml" filepath="$PROJECT_DIR$/.idea/modules/test3sbtscala-build.iml" />
     </modules>
   </component>
 </project>
