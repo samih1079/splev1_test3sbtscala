@@ -26,7 +26,8 @@ println("kkk")
 // the source graph.
   //....
   //val vrid=8
-  SimilarityDegree.getMColorForPRog(graph,"p1",2)
+  //SimilarityDegree.getMColorForPRog(graph,"p1",2)
+  SimilarityDegree.getMcolorPrVDSetByForProgram(graph,"p1",2);
 //  println("connectedComponents():")
 //  getComponentByVr(graph.subgraph(epred = e=> e.attr=="parametric"),2).edges.foreach(println)
 

@@ -85,7 +85,7 @@ val conf=new SparkConf().setAppName("graphtest1").setMaster("local").set("spark.
       val ccg=getComponentByVr(graph,v._1)
       val tmp:MColorBSD=new MColorBSD(ccg);
       tmp.compute()
-      println(tmp)
+      println("getMColorForPRog:"+tmp)
       if(tmp.m_color>=m)
       {
         mset+=tmp
@@ -98,12 +98,13 @@ val conf=new SparkConf().setAppName("graphtest1").setMaster("local").set("spark.
     mset
   }
 
-  def getMcolorPrVDSetByForProgram(graph: Graph[(String,String),String], pro:String,m:Int):Set[MColordPrVD]={
-    var reSet:Set[MColordPrVD]=Set()
-    val mcSet:Set[MColorBSD]=getMColorForPRog(graph,pro,m)
-    var mset:Set[MColorBSD]=Set()
+  def getMcolorPrVDSetByForProgram(graph: Graph[(String,String),String], pro:String,m:Int):MColordPrVD={
+    //val mcSet:Set[MColorBSD]=getMColorForPRog(graph,pro,m)
 
-    var cpv:Long=0;var csv:Long=0;var cov:Long=0;var cpsv:Long=0;
+    var prdv:MColordPrVD=MColordPrVD(pro,m)
+
+    var cpv:Long=0;var csv:Long=0;var cov:Long=0;var cpsv:Long=0;var k:Int=0;
+    //get all program class's
     graph.vertices.collect().filter { case (id, (prog, klass)) => prog == pro }foreach(v=>{
       //cset+= (v._1->v._2._2)
       println("getMcolorPrVDSetByForProgram:"+pro+":"+v._2._2)
@@ -111,22 +112,27 @@ val conf=new SparkConf().setAppName("graphtest1").setMaster("local").set("spark.
       val tmp:MColorBSD=new MColorBSD(ccg);
       tmp.compute()
       println(tmp)
+      k+=1
       if(tmp.m_color>=m)
       {
-        mset+=tmp
-        val cpara= ccg.subgraph(epred = e=> e.srcAttr._1== pro && e.attr==SimTypeMames.para).edges.count()
+        prdv.graph4vlass+=(v._2._2->tmp)
+        val cpara= ccg.subgraph(epred = e=> e.srcAttr._1== pro && e.srcAttr._2== v._2._2 && e.attr==SimTypeMames.para).edges.count()
         cpv+=cpara
-       val csub= ccg.subgraph(epred = e=> e.srcAttr._1== pro && e.attr==SimTypeMames.subt).edges.count()
+       val csub= ccg.subgraph(epred = e=> e.srcAttr._1== pro && e.srcAttr._2== v._2._2 && e.attr==SimTypeMames.subt).edges.count()
         csv+=csub
-        var cover= ccg.subgraph(epred = e=> e.srcAttr._1== pro && e.attr==SimTypeMames.over).edges.count()
+        var cover= ccg.subgraph(epred = e=> e.srcAttr._1== pro && e.srcAttr._2== v._2._2 && e.attr==SimTypeMames.over).edges.count()
         cov+=cover
         if(cpara==0 && csub==0 && cover==0)
             cpsv+=1
       }
+
     })
-
-
-    reSet
+    prdv.ov=cov/k.toDouble
+    prdv.sv=csv/k.toDouble
+    prdv.pv=cpv/k.toDouble
+    prdv.psv=cpsv/k.toDouble
+    println("getMcolorPrVDSetByForProgram:"+prdv)
+    prdv
   }
 
   def buildRelationGraph(): Graph[(String, String), String] = {
