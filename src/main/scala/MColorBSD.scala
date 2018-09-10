@@ -17,8 +17,6 @@ case class MColorBSD (var subg:Graph[(String,String),String]){
   def compute(): Unit ={
     var progsSet:Set[String]=Set()
 
-
-
     var cps=subg.edges.filter(e=> e.attr=="parametric").count();
     var cos=subg.edges.filter(e=> e.attr=="overloading").count();
     var css=subg.edges.filter(e=> e.attr=="subtyping").count()

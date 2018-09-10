@@ -78,7 +78,7 @@ val conf=new SparkConf().setAppName("graphtest1").setMaster("local").set("spark.
   def getMColorForPRog(graph: Graph[(String,String),String], pro:String,m:Int):Set[MColorBSD]={
     var mset:Set[MColorBSD]=Set()
     //var cset:Map[Long,String]=Map()
-    println("getMColorForPRog cset:")
+   // println("getMColorForPRog cset:")
     graph.vertices.collect().filter { case (id, (prog, klass)) => prog == pro }foreach(v=>{
       //cset+= (v._1->v._2._2)
       println(pro+":"+v._2._2)
@@ -94,13 +94,38 @@ val conf=new SparkConf().setAppName("graphtest1").setMaster("local").set("spark.
 //    cset.foreach(s=>{
 //
 //    })
-    println(mset.size)
+   // println("getMColorForPRog:"+mset.size)
     mset
   }
 
   def getMcolorPrVDSetByForProgram(graph: Graph[(String,String),String], pro:String,m:Int):Set[MColordPrVD]={
     var reSet:Set[MColordPrVD]=Set()
     val mcSet:Set[MColorBSD]=getMColorForPRog(graph,pro,m)
+    var mset:Set[MColorBSD]=Set()
+
+    var cpv=0;var csv=0;var cov=0;var cpsv=0;
+    graph.vertices.collect().filter { case (id, (prog, klass)) => prog == pro }foreach(v=>{
+      //cset+= (v._1->v._2._2)
+      println("getMcolorPrVDSetByForProgram:"+pro+":"+v._2._2)
+      val ccg=getComponentByVr(graph,v._1)
+      val tmp:MColorBSD=new MColorBSD(ccg);
+      tmp.compute()
+      println(tmp)
+      if(tmp.m_color>=m)
+      {
+        mset+=tmp
+        val cpara= ccg.subgraph(epred = e=> e.srcAttr._1== pro && e.attr==SimTypeMames.para).edges.count()
+        cpv+=cpara
+       val csub= ccg.subgraph(epred = e=> e.srcAttr._1== pro && e.attr==SimTypeMames.subt).edges.count()
+        csv+=csub
+        var cover= ccg.subgraph(epred = e=> e.srcAttr._1== pro && e.attr==SimTypeMames.over).edges.count()
+        cov+=cover
+        if(cpara==0 && csub==0 && cover==0)
+            cpsv+=1
+      }
+    })
+
+
     reSet
   }
 

@@ -14,7 +14,7 @@ println("kkk")
   //val sc=SparkContextUtils.getSparkContext
   val users: RDD[(Long, (String, String))] =
     sc.parallelize(Array((3L, ("p1", "c11")), (7L, ("p1", "c12")),
-      (5L, ("p2", "c21")), (2L, ("p2", "c22")),(8L, ("p3", "c31")),(9L, ("p3", "c32"))))
+      (5L, ("p2", "c21")), (2L, ("p2", "c22")),(8L, ("p3", "c31")),(9L, ("p1", "c32"))))
 
   val relationships: RDD[Edge[String]] =
     sc.parallelize(Array(Edge(3L, 2L, "parametric"), Edge(5L, 3L, "parametric"),
