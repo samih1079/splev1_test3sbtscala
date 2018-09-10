@@ -17,10 +17,10 @@ case class MColorBSD (var subg:Graph[(String,String),String]){
   def compute(): Unit ={
     var progsSet:Set[String]=Set()
 
-    var cps=subg.edges.filter(e=> e.attr=="parametric").count();
-    var cos=subg.edges.filter(e=> e.attr=="overloading").count();
-    var css=subg.edges.filter(e=> e.attr=="subtyping").count()
-    var cns=subg.edges.filter(e=> e.attr=="none").count()
+    var cps=subg.edges.filter(e=> e.attr==SimTypeMames.para).count();
+    var cos=subg.edges.filter(e=> e.attr==SimTypeMames.over).count();
+    var css=subg.edges.filter(e=> e.attr==SimTypeMames.subt).count()
+    var cns=subg.edges.filter(e=> e.attr==SimTypeMames.non).count()
     subg.vertices.collect().foreach(v=>{
       if(!progsSet.contains(v._2._1))
         progsSet+=v._2._1
@@ -32,7 +32,15 @@ case class MColorBSD (var subg:Graph[(String,String),String]){
     ss=(2.0*css)/(k*(k-1))
     ns=(2.0*cns)/(k*(k-1))
   }
-  override def toString: String = "m:"+m_color+" ps:"+ps+" os:"+os+" ss:"+ss+" ns:"+ns
+  override def toString: String ="MColorBSD:"+getSubGrpaphEdges()+'\n'+
+    "m:"+m_color+" ps:"+ps+" os:"+os+" ss:"+ss+" ns:"+ns
+
+
+  def getSubGrpaphEdges():String={
+    var res=""
+    subg.edges.collect().foreach(e=>res+=e.toString)
+    res
+  }
 }
 //        subg.edges.collect().foreach(edge=> {
 //      //println(edge+"   attr:"+edge.attr)
