@@ -6,6 +6,7 @@ import org.apache.spark.rdd.RDD
 import SPLETools.{spark, _}
 import org.apache.spark.graphx._
 import MyGraphNdSetUtils._
+import SimTypeMames._
 import org.apache.spark.sql.DataFrame
 
 import scala.util.MurmurHash
@@ -36,36 +37,38 @@ val conf=new SparkConf().setAppName("graphtest1").setMaster("local").set("spark.
 //  bk.foreach { println }
 
 //test visual Graph
-  val subg=fullGraph.subgraph(vpred = (id,attr)=> attr._1== "P3" || attr._1 == "P6")
+  val subg=fullGraph.subgraph(epred = e=>e.attr!=non && e.srcAttr._1=="P3" && e.dstAttr._1=="P6")
   println(subg.vertices.count())
+  println(subg.edges.count())
   saveGexf(subg)
+getMcolorPrVDSetByForProgram(fullGraph,"P3",2)
 
-  var vset:Set[Long] = Set[Long]()
-  //
-  subg.vertices.collect().foreach(v=> {
-    vset=vset+v._1
-    //  print(v._1+",")
-  })
-  println("size:"+vset.size)
-  // println()
-  var allPotinalGraph:Set[MColorBSD]=Set()
-  MyGraphNdSetUtils.power3(vset, 2).foreach(u=>{
-    println("U:"+u)
-    val sub=subg.subgraph(vpred = (id,attr)=>u.contains(id)).cache()
-    if(MyGraphNdSetUtils.isConnectedGraph(sub))
-    {
-      print("wait.")
-      val tmp:MColorBSD=new MColorBSD(sub);
-      tmp.compute()
-      allPotinalGraph+=tmp;
-    }
-  })
-  println("allPotinalGraph:"+allPotinalGraph.size)
-  allPotinalGraph.foreach(s=>{
-    s.subg.edges.foreach(e=> println(e))
-    println(s)
-  })
-
+//  var vset:Set[Long] = Set[Long]()
+//  //
+//  subg.vertices.collect().foreach(v=> {
+//    vset=vset+v._1
+//    //  print(v._1+",")
+//  })
+//  println("size:"+vset.size)
+//  // println()
+//  var allPotinalGraph:Set[MColorBSD]=Set()
+//  MyGraphNdSetUtils.power3(vset, 2).foreach(u=>{
+//    println("U:"+u)
+//    val sub=subg.subgraph(vpred = (id,attr)=>u.contains(id)).cache()
+//    if(MyGraphNdSetUtils.isConnectedGraph(sub))
+//    {
+//      print("wait.")
+//      val tmp:MColorBSD=new MColorBSD(sub);
+//      tmp.compute()
+//      allPotinalGraph+=tmp;
+//    }
+//  })
+//  println("allPotinalGraph:"+allPotinalGraph.size)
+//  allPotinalGraph.foreach(s=>{
+//    s.subg.edges.foreach(e=> println(e))
+//    println(s)
+//  })
+//
 
 
   /**
@@ -107,31 +110,36 @@ val conf=new SparkConf().setAppName("graphtest1").setMaster("local").set("spark.
     //get all program class's
     graph.vertices.collect().filter { case (id, (prog, klass)) => prog == pro }foreach(v=>{
       //cset+= (v._1->v._2._2)
-      println("getMcolorPrVDSetByForProgram:"+pro+":"+v._2._2)
+      //println("getMcolorPrVDSetByForProgram:"+pro+":"+v._2._2)
       val ccg=getComponentByVr(graph,v._1)
       val tmp:MColorBSD=new MColorBSD(ccg);
       tmp.compute()
-      println(tmp)
+      //println(tmp)
       k+=1
       if(tmp.m_color>=m)
       {
         prdv.graph4vlass+=(v._2._2->tmp)
-        val cpara= ccg.subgraph(epred = e=> e.srcAttr._1== pro && e.srcAttr._2== v._2._2 && e.attr==SimTypeMames.para).edges.count()
+        val cpara= ccg.subgraph(epred = e=> (e.srcAttr._1== pro && e.srcAttr._2== v._2._2 || e.dstAttr._1== pro && e.dstAttr._2== v._2._2) && e.attr==SimTypeMames.para).edges.count()
         cpv+=cpara
-       val csub= ccg.subgraph(epred = e=> e.srcAttr._1== pro && e.srcAttr._2== v._2._2 && e.attr==SimTypeMames.subt).edges.count()
+       val csub= ccg.subgraph(epred = e=> (e.srcAttr._1== pro && e.srcAttr._2== v._2._2 || e.dstAttr._1== pro && e.dstAttr._2== v._2._2) && e.attr==SimTypeMames.subt).edges.count()
         csv+=csub
-        var cover= ccg.subgraph(epred = e=> e.srcAttr._1== pro && e.srcAttr._2== v._2._2 && e.attr==SimTypeMames.over).edges.count()
+        var cover= ccg.subgraph(epred = e=> (e.srcAttr._1== pro && e.srcAttr._2== v._2._2 || e.dstAttr._1== pro && e.dstAttr._2== v._2._2) && e.attr==SimTypeMames.over).edges.count()
         cov+=cover
-        if(cpara==0 && csub==0 && cover==0)
+        if(tmp.m_color==1 || (cpara==0 && csub==0 && cover==0))
             cpsv+=1
       }
+      else
+      if(tmp.m_color==1)
+        cpsv+=1
+
 
     })
+    prdv.k=k
     prdv.ov=cov/k.toDouble
     prdv.sv=csv/k.toDouble
     prdv.pv=cpv/k.toDouble
     prdv.psv=cpsv/k.toDouble
-    println("getMcolorPrVDSetByForProgram:"+prdv)
+    println("getMcolorPrVDSetByForProgram:\n"+prdv)
     prdv
   }
 

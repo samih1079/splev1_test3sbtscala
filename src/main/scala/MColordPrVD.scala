@@ -4,9 +4,11 @@ case class MColordPrVD(var product:String,var m:Int=2) {
    var sv:Double=0;
    var ov:Double=0;
    var psv:Double=0;
-    var graph4vlass:Map[String,MColorBSD]=Map()
+  var k:Int=0
+   var graph4vlass:Map[String,MColorBSD]=Map()
 
-  override def toString: String = "MColordPrVD:"+product+'\n'+" pv:"+pv+",sv:"+sv+",ov:"+ov+",psv:"+psv+'\n'+
+
+  override def toString: String = "MColordPrVD:"+product+'\n'+"k:"+k+ ",pv:"+pv+",sv:"+sv+",ov:"+ov+",psv:"+psv+'\n'+
   getStringGraphs()
 
 
