@@ -39,7 +39,7 @@ val conf=new SparkConf().setAppName("graphtest1").setMaster("local").set("spark.
 //test visual Graph
   val subg=fullGraph.subgraph(epred = e=>e.attr!=non && e.srcAttr._1=="P3" && e.dstAttr._1=="P6")
   println(subg.vertices.count())
-  println(subg.edges.count())
+ // println(subg.edges.count())
   saveGexf(subg)
 getMcolorPrVDSetByForProgram(fullGraph,"P3",2)
 

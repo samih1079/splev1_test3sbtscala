@@ -37,7 +37,27 @@ val sc = SparkContext.getOrCreate(conf)
 //
   graph.vertices.collect().foreach(v=> {
     vset=vset+v._1
-  print(v._1+",")
+  //  print(v._1+",")
+  })
+  //println("size:"+vset.size)
+ // println()
+  var allPotinalGraph:Set[MColorBSD]=Set()
+  MyGraphNdSetUtils.power3(vset, 2).foreach(u=>{
+ //   println("U:"+u)
+    val sub=graph.subgraph(vpred = (id,attr)=>u.contains(id)).cache()
+    if(MyGraphNdSetUtils.isConnectedGraph(sub))
+      {
+
+        val tmp:MColorBSD=new MColorBSD(sub);
+        tmp.compute()
+        allPotinalGraph+=tmp;
+      }
+  })
+  println("allPotinalGraph:"+allPotinalGraph.size)
+  allPotinalGraph.foreach(s=>{
+    s.subg.edges.foreach(e=> println(e))
+    println(s)
+
   })
 //  //println("size:"+vset.size)
 // // println()
