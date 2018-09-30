@@ -1,4 +1,4 @@
-case class MColordPrVD(var product:String,var m:Int=2) {
+case class MColordPrVD(var product:String,var m:Int=2) extends Ordered[MColordPrVD]{
 
    var pv:Double=0;
    var sv:Double=0;
@@ -29,8 +29,9 @@ case class MColordPrVD(var product:String,var m:Int=2) {
 //    sv= g.subgraph(epred = e=> e.srcAttr._1== product && e.attr==SimTypeMames.subt).edges.count()/klasses.toDouble;
 //    ov= g.subgraph(epred = e=> e.srcAttr._1== product && e.attr==SimTypeMames.over).edges.count()/klasses.toDouble;
 //    psv= g.subgraph(epred = e=> e.srcAttr._1== product && e.attr==SimTypeMames.para).edges.count()/klasses.toDouble;
+  override def compare(that: MColordPrVD): Int = {
+  val res:Int=0
 
-
-
-
+  res
+}
 }
