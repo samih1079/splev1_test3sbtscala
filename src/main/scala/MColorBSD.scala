@@ -46,11 +46,13 @@ case class MColorBSD(var subg: Graph[(String, String), String]) extends Ordered[
 
   override def compare(that: MColorBSD): Int = {
     var res: Int = 0;
-    if (this.ps < that.ps) res = 1
-    else if (this.ps == that.ps && this.ss < that.ss) res = 1
-    else if (this.ps == that.ps && this.ss == that.ss && this.os < that.os) res = 1
+
+    if (this.ps > that.ps) res = 1
+    else if (this.ps == that.ps && this.ss > that.ss) res = 1
+    else if (this.ps == that.ps && this.ss == that.ss && this.os > that.os) res = 1
     else
       res = (-1)
+    println("res:"+res)
     res
   }
 }

@@ -13,7 +13,7 @@ case class MColordPrVD(var product:String,var m:Int=2) {
 
 
   def getStringGraphs():String={
-   var res:String=""
+   var res:String="getStringGraphs size:"+graph4vlass.size+"  "
 
     graph4vlass.toSeq.sortBy(_._2).foreach(f=>res+="class:"+f._1+":"+f._2.toString+'\n')
   res

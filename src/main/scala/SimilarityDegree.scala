@@ -131,8 +131,6 @@ getMcolorPrVDSetByForProgram(fullGraph,"P3",2)
       else
       if(tmp.m_color==1)
         cpsv+=1
-
-
     })
     prdv.k=k
     prdv.ov=cov/k.toDouble
